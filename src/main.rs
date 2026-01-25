@@ -161,12 +161,11 @@ fn render_page(frame: &mut Frame, app_state: &mut ApplicationState) {
     let header = chunks[0]; let body = chunks[1]; let footer = chunks[2];
 
  
-    // let title = format!("{} {}", "Page:", app_state.page_list[app_state.selected_page.unwrap()].title);
-    let title = "betlog";
+    let title = format!("{} {}", "Page:", app_state.page_list[app_state.selected_page.unwrap()].title);
 
     let header_block = Block::default().borders(Borders::ALL).title("Header");
     let main_block = Block::default().borders(Borders::ALL).title(title);
-    let footer_block = Block::default().borders(Borders::ALL).title("Controls: ");
+    let footer_block = Block::default().borders(Borders::ALL).title("Controls:");
 
     frame.render_widget(header_block, header);
     frame.render_widget(main_block, body);
@@ -260,7 +259,7 @@ fn handle_page_select_input(key: KeyEvent, app_state: & mut ApplicationState) {
             }
         }
         KeyCode::Enter => {
-            if let page = Some(app_state.selected_page) && app_state.page_list.len() > 0 {
+            if !app_state.page_list_state.selected().is_none() && app_state.page_list.len() > 0 {
                 app_state.mode = TodoModes::Normal;
             }
         }
