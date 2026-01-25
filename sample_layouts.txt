@@ -1,0 +1,74 @@
+ULTRA-MINIMAL TODO TUI LAYOUTS
+
+MAIN LIST (single-pane)
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ TODO_RS  [/] search        [A] add  [E] edit  [D] done  [F] filter  [H] help │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ ☐ Fix README typos                              Fri   P2   #docs             │
+│ ◐ Prep sprint plan                              Mon   P1   #work             │
+│ ✔ Pay utilities                                 Today P2   #home             │
+│ ☐ Refill meds                                   Tue   P1   #health           │
+│                                                                         4/27 │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ [Space] toggle  [Enter] details  [S] snooze  [M] move  [/] search            │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+DETAIL (focused)
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ Fix README typos                                                   [Esc] back│
+├──────────────────────────────────────────────────────────────────────────────┤
+│ Status: ☐   Due: Fri   Priority: P2   Tags: docs                             │
+│ Notes:                                                                       │
+│ - clarify installation steps                                                 │
+│ - fix typos in examples                                                      │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ [E] edit  [Space] toggle  [S] snooze  [C] convert  [X] delete                │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+ADD / EDIT (compact form)
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ EDIT TASK                                                        [Esc] cancel│
+├──────────────────────────────────────────────────────────────────────────────┤
+│ Title:    [ Fix README typos                                   ]             │
+│ Status:   ( ) Todo  (•) Doing  ( ) Done                                      │
+│ Due:      [ 2026-01-26 ]   Priority: [ P2 ]   Tags: [ docs ]                 │
+│ Notes:    [ clarify install steps...]                                        │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ [Save]  [Discard]                                                            │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+FILTERS (minimal overlay)
+┌────────────────────────────┐
+│ Filters              [Esc] │
+├────────────────────────────┤
+│ [ ] Overdue                │
+│ [ ] Due soon               │
+│ [ ] P1                     │
+│ [ ] P2                     │
+│ [ ] P3                     │
+│ [ ] No due                 │
+└────────────────────────────┘
+
+SETTINGS (minimal)
+┌────────────────────────────┐
+│ Settings             [Esc] │
+├────────────────────────────┤
+│ Theme:    Dark             │
+│ Keys:     Vim+Arrows       │
+│ Date fmt: YYYY-MM-DD       │
+│ Start wk: Mon              │
+└────────────────────────────┘
+
+HELP (key map)
+┌────────────────────────────┐
+│ Help                 [Esc] │
+├────────────────────────────┤
+│ ↑↓ / j k   move            │
+│ Enter     details          │
+│ Space     toggle           │
+│ A         add              │
+│ E         edit             │
+│ D         done             │
+│ F         filter           │
+│ /         search           │
+└────────────────────────────┘
