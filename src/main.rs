@@ -3,8 +3,8 @@ use crossterm::event::{self, Event, KeyCode, KeyEvent};
 use ratatui::{DefaultTerminal, Frame,
     layout::{Constraint, Alignment, Layout, Direction, Rect},
     widgets::{Block, List, ListItem, ListState, Borders, Paragraph},
-    text::{Line, Text},
-    style::{Style, Color},
+    text::{Line, Text, Span},
+    style::{Style, Color, Modifier},
 };
 use color_eyre::Result;
 
@@ -31,11 +31,12 @@ enum AlertMode {
     Message,
 }
 
+#[derive(PartialEq)]
 enum TodoState {
     Done,
     Failed,
     Late,
-    Idle,
+    Pending,
 }
 
 struct ApplicationState {
@@ -57,6 +58,7 @@ struct ApplicationState {
 
     // UI
     list_length: usize,
+    display_infobar: bool,
     page_list_state: ListState,
     item_list_state: ListState,
 }
@@ -99,6 +101,7 @@ impl ApplicationState {
             alert_string_buffer: String::new(),
 
             list_length: 0,
+            display_infobar: false,
             page_list_state: ListState::default(),
             item_list_state: ListState::default(),
         } 
@@ -202,7 +205,7 @@ impl TodoGroup {
         self.item_list.push(TodoItem::new(_title));
     } 
 
-    fn toggle_show_item(&mut self) {
+    fn toggle_show_items(&mut self) {
         if self.show_items {
             self.show_items = false;
         }
@@ -234,12 +237,21 @@ impl TodoItem {
             id: 0,
             title: _title,
             description: String::new(),
-            state: TodoState::Idle,
+            state: TodoState::Pending,
         }    
     }
 
     fn rename(&mut self, _title: String) {
         self.title = _title;
+    }
+
+    fn toggle_state(&mut self) {
+        if self.state != TodoState::Done {
+            self.state = TodoState::Done;
+        } 
+        else {
+            self.state = TodoState::Pending;
+        }
     }
 }
 
@@ -328,14 +340,21 @@ fn render_page(frame: &mut Frame, app_state: &mut ApplicationState) {
     frame.render_widget(footer_block, footer);
 
     let inner_area = main_block.inner(body);
-    let main_chunks = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([
-            Constraint::Percentage(60),
-            Constraint::Percentage(40),
-        ]).split(inner_area);
+    let inner1;
+    if app_state.display_infobar {
+        let main_chunks = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([
+                Constraint::Percentage(60),
+                Constraint::Percentage(40),
+            ]).split(inner_area);
 
-    let inner1 = main_chunks[0]; let inner2 = main_chunks[1];
+        inner1 = main_chunks[0]; 
+        let inner2 = main_chunks[1];
+    }
+    else {
+        inner1 = inner_area;
+    }
 
     let mut list_state = app_state.item_list_state.clone();
     let content_block = block_content_list(app_state);
@@ -352,11 +371,27 @@ fn block_content_list(app_state: &mut ApplicationState) -> List {
 
     if let page = &app_state.page_list[app_state.selected_page.unwrap()] {
         for (group_index, group) in page.group_list.iter().enumerate() {
-            items.push(ListItem::new(Line::from(group.title.clone())));
+            let mut prefix_group = "";
+            if group.show_items { prefix_group = "▼"; }
+            else { prefix_group = "▶"; }
+
+            let group_string = format!("{} {}", prefix_group, group.title.clone());
+            items.push(ListItem::new(Line::from(
+                Span::styled(
+                    group_string, Style::default().add_modifier(Modifier::BOLD)))));
             mapping.push((group_index, None));
             if group.show_items {
                 for (todo_index, todo) in group.item_list.iter().enumerate() {
-                    items.push(ListItem::new(Line::from(format!("    {}", todo.title.as_str()))));
+                    // Todo string 
+                    let mut prefix_todo = "";
+                    match todo.state {
+                        TodoState::Done => prefix_todo = "[✔]",
+                        TodoState::Failed => prefix_todo = "[X]",
+                        _ => prefix_todo = "[ ]",
+                    }
+
+                    let todo_string = format!("    {} {}", prefix_todo, todo.title.as_str());
+                    items.push(ListItem::new(Line::from(todo_string)));
                     mapping.push((group_index, Some(todo_index)));
                 }
             }
@@ -366,7 +401,7 @@ fn block_content_list(app_state: &mut ApplicationState) -> List {
 
     app_state.list_length = mapping.len();
 
-    if mapping.is_empty() {
+    if mapping.is_empty() { // None selected
         app_state.item_list_state.select(None);
         app_state.selected_group = None;
         app_state.selected_todo = None;
@@ -522,7 +557,7 @@ fn handle_page_select_input(key: KeyEvent, app_state: &mut ApplicationState) {
     }
 }
 
-fn handle_normal_input(key: KeyEvent, app_state: &mut ApplicationState) {
+fn handle_normal_input(key: KeyEvent, app_state: &mut ApplicationState) { // MAIN SHIT
     match key.code {
         KeyCode::Esc => app_state.mode = TodoModes::PageSelect,
         KeyCode::Char('a') => app_state.mode = TodoModes::AddSelect,
@@ -531,6 +566,19 @@ fn handle_normal_input(key: KeyEvent, app_state: &mut ApplicationState) {
         }
         KeyCode::Char('j') | KeyCode::Down => {
             app_state.selected_item_down();
+        }
+        KeyCode::Char(' ') => {
+            if app_state.selected_item().is_none() && app_state.selected_group().is_some() {
+                app_state.selected_mut_group().unwrap().toggle_show_items();
+                return;
+            } 
+
+            if app_state.selected_mut_item().is_some() {
+                app_state.selected_mut_item().unwrap().toggle_state();
+            }
+        }
+        KeyCode::Enter => {
+            
         }
         _ => (),
     }
@@ -601,7 +649,6 @@ fn handle_insert(key: KeyEvent, app_state: &mut ApplicationState) {
                             group.add_todo(todo_title);
                             app_state.mode = TodoModes::Normal;
                             app_state.input_mode = ActiveInput::None;
-
                         }
                         else {
                             // TODO: have it create a new group "Untitled" and add todo on it. 
